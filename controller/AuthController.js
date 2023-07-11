@@ -16,7 +16,7 @@ const UserRegister = async (req, res) => {
       password: user_password,
     },
   });
-  return res.status(200).send("user created successfully");
+  return res.status(200).json({ message: "user created successfully" });
 };
 
 const UserLogin = async (req, res) => {
