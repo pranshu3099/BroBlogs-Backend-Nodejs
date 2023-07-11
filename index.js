@@ -10,20 +10,39 @@ const { getCategories } = require("./controller/CategoryController");
 const { addLikes, remove_like } = require("./controller/LikesController");
 const { create, getComments } = require("./controller/CommentController");
 const app = express();
-const { z } = require("zod");
+const { z, string } = require("zod");
 const { validate } = require("./middleware/validate");
+const cors = require("cors");
 const port = 3000;
 app.use(express.json());
+
+if (process.env.NODE_ENV === "development") {
+  app.use(cors());
+}
+
+const passwordRegex =
+  /^(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=])[A-Za-z\d@#$%^&+=]{6,15}$/;
+
+const emailRegex = /^[\w.+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const mobileRegex = /^\d{10}$/;
+
+const registerSchema = z.object({
+  name: string().min(5).max(20),
+  password: string().min(6).max(15).regex(passwordRegex, {
+    message:
+      "Password must contain at least one capital letter, one digit, and one special character",
+  }),
+  email: string().max(20).regex(emailRegex, { message: "Invalid email" }),
+  mobile_number: string()
+    .min(10)
+    .max(10)
+    .regex(mobileRegex, { message: "Inavalid mobile number" }),
+});
 
 app.post(
   "/register",
   validate({
-    body: z.object({
-      name: z.string().min(5).max(20),
-      password: z.string().min(6).max(10),
-      email: z.string().max(20),
-      mobile_number: z.string().min(10).max(10),
-    }),
+    body: registerSchema,
   }),
   UserRegister
 );
@@ -31,8 +50,11 @@ app.post(
   "/login",
   validate({
     body: z.object({
-      email: z.string().max(20),
-      password: z.string().min(6).max(10),
+      email: z.string().max(20).regex(emailRegex, { message: "Invalid email" }),
+      password: z.string().min(6).max(15).regex(passwordRegex, {
+        message:
+          "Password must contain at least one capital letter, one digit, and one special character",
+      }),
     }),
   }),
   UserLogin
