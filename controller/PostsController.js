@@ -70,7 +70,7 @@ const getUserPost = async (req, res) => {
       },
     });
 
-    console.log(JSON.stringify(user_posts, null, 2));
+    return res.status(200).json({ posts: user_posts });
   } else {
     return res.status(401).json({ message: "unauthorized" });
   }
@@ -107,7 +107,7 @@ const getSinglePost = async (req, res) => {
         },
       },
     });
-    console.log(JSON.stringify(single_posts, null, 2));
+    return res.status(200).json({ posts: single_posts });
   }
 };
 
