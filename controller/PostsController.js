@@ -28,6 +28,8 @@ const getHomePosts = async (req, res) => {
       posts_id: true,
       content: true,
       likes_count: true,
+      created_at: true,
+      updated_at: true,
       user: {
         select: {
           name: true,
@@ -35,11 +37,12 @@ const getHomePosts = async (req, res) => {
       },
     },
   });
-  console.log(results);
+  res.status(200).json([{ posts: results }]);
 };
 
 const getUserPost = async (req, res) => {
-  const { Authorization, user_id } = req.params;
+  const { user_id } = req.params;
+  const { Authorization } = req.body;
   if (Authorization) {
     const user_posts = await prisma.posts.findMany({
       where: {
@@ -77,8 +80,10 @@ const getUserPost = async (req, res) => {
 };
 
 const getSinglePost = async (req, res) => {
-  const { Authorization, post_id } = req.params;
-  if (Authorization) {
+  const { post_id } = req.params;
+  const { authorization } = req.headers;
+
+  if (authorization) {
     const single_posts = await prisma.posts.findFirst({
       where: {
         posts_id: Number(post_id),
