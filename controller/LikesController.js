@@ -7,7 +7,6 @@ const updatepostLikes = async (post_id) => {
       post_id: Number(post_id),
     },
   });
-
   const upadteLike = await prisma.posts.update({
     where: {
       posts_id: Number(post_id),
@@ -16,6 +15,7 @@ const updatepostLikes = async (post_id) => {
       likes_count: count,
     },
   });
+  return count;
 };
 
 const addLikes = async (req, res) => {
@@ -35,9 +35,9 @@ const addLikes = async (req, res) => {
       },
     });
 
-    updatepostLikes(post_id);
-
-    res.status(200).send("liked successfullly");
+    let count;
+    await updatepostLikes(post_id).then((res) => (count = res));
+    return res.status(200).json({ likes: count });
   } else {
     res.send("already liked");
   }
@@ -51,8 +51,9 @@ const remove_like = async (req, res) => {
       user_id: Number(user_id),
     },
   });
-  updatepostLikes(post_id);
-  res.send("like removed");
+  let count;
+  await updatepostLikes(post_id).then((res) => (count = res));
+  return res.status(200).json({ likes: count });
 };
 
 module.exports = {
