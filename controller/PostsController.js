@@ -2,9 +2,16 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const createPosts = async (req, res, next) => {
-  const { title, content, category_id, posts_id, user_id, Authorization } =
-    req.body;
-  if (Authorization) {
+  const {
+    title,
+    content,
+    category_id,
+    posts_id,
+    user_id,
+    likes_count = 0,
+  } = req.body;
+  const { authorization } = req.headers;
+  if (authorization) {
     const post = await prisma.posts.create({
       data: {
         title,
@@ -12,11 +19,12 @@ const createPosts = async (req, res, next) => {
         category_id,
         posts_id,
         user_id,
+        likes_count,
       },
     });
-    return res.status(200).send("post created successfully");
+    return res.status(200).json({ message: "post created successfully" });
   } else {
-    return res.status(401).json({ message: "unauthorizedx" });
+    return res.status(401).json({ message: "unauthorized" });
   }
 };
 
@@ -29,7 +37,6 @@ const getHomePosts = async (req, res) => {
       content: true,
       likes_count: true,
       created_at: true,
-      updated_at: true,
       user: {
         select: {
           name: true,
@@ -42,8 +49,8 @@ const getHomePosts = async (req, res) => {
 
 const getUserPost = async (req, res) => {
   const { user_id } = req.params;
-  const { Authorization } = req.body;
-  if (Authorization) {
+  const { authorization } = req.headers;
+  if (authorization) {
     const user_posts = await prisma.posts.findMany({
       where: {
         user_id: Number(user_id),
@@ -54,6 +61,7 @@ const getUserPost = async (req, res) => {
         posts_id: true,
         content: true,
         likes_count: true,
+        created_at: true,
         user: {
           select: {
             name: true,
@@ -94,6 +102,7 @@ const getSinglePost = async (req, res) => {
         posts_id: true,
         content: true,
         likes_count: true,
+        created_at: true,
         user: {
           select: {
             name: true,
@@ -112,7 +121,7 @@ const getSinglePost = async (req, res) => {
         },
       },
     });
-    return res.status(200).json({ posts: single_posts });
+    return res.status(200).json([{ posts: single_posts }]);
   }
 };
 
