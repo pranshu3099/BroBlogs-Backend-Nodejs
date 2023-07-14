@@ -27,12 +27,12 @@ const emailRegex = /^[\w.+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const mobileRegex = /^\d{10}$/;
 
 const registerSchema = z.object({
-  name: string().min(5).max(20),
+  name: string().min(5).max(100),
   password: string().min(6).max(15).regex(passwordRegex, {
     message:
       "Password must contain at least one capital letter, one digit, and one special character",
   }),
-  email: string().max(20).regex(emailRegex, { message: "Invalid email" }),
+  email: string().max(100).regex(emailRegex, { message: "Invalid email" }),
   mobile_number: string()
     .min(10)
     .max(10)
@@ -50,7 +50,10 @@ app.post(
   "/login",
   validate({
     body: z.object({
-      email: z.string().max(20).regex(emailRegex, { message: "Invalid email" }),
+      email: z
+        .string()
+        .max(100)
+        .regex(emailRegex, { message: "Invalid email" }),
       password: z.string().min(6).max(15).regex(passwordRegex, {
         message:
           "Password must contain at least one capital letter, one digit, and one special character",
