@@ -34,7 +34,6 @@ const getComments = async (req, res) => {
   return res.status(200).json({ comments: user_comments });
 };
 
-console.log("hey");
 module.exports = {
   create,
   getComments,
