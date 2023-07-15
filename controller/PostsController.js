@@ -8,6 +8,7 @@ const createPosts = async (req, res, next) => {
     category_id,
     posts_id,
     user_id,
+    image,
     likes_count = 0,
   } = req.body;
   const { authorization } = req.headers;
@@ -16,6 +17,7 @@ const createPosts = async (req, res, next) => {
       data: {
         title,
         content,
+        image,
         category_id,
         posts_id,
         user_id,
@@ -101,6 +103,7 @@ const getSinglePost = async (req, res) => {
         category_id: true,
         posts_id: true,
         content: true,
+        image: true,
         likes_count: true,
         created_at: true,
         user: {
@@ -121,7 +124,8 @@ const getSinglePost = async (req, res) => {
         },
       },
     });
-    return res.status(200).json([{ posts: single_posts }]);
+    const data = { ...single_posts, image: single_posts.image || "" };
+    return res.status(200).json([{ posts: data }]);
   }
 };
 
