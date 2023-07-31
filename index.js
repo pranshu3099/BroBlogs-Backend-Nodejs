@@ -1,10 +1,15 @@
 const express = require("express");
-const { UserRegister, UserLogin } = require("./controller/AuthController");
+const {
+  UserRegister,
+  UserLogin,
+  githuboauthHandler,
+} = require("./controller/AuthController");
 const {
   createPosts,
   getHomePosts,
   getUserPost,
   getSinglePost,
+  uploadImage,
 } = require("./controller/PostsController");
 const { getCategories } = require("./controller/CategoryController");
 const { addLikes, remove_like } = require("./controller/LikesController");
@@ -12,7 +17,11 @@ const { create, getComments } = require("./controller/CommentController");
 const app = express();
 const { z, string } = require("zod");
 const { validate } = require("./middleware/validate");
+const multer = require("multer");
+const upload = multer({ dest: "/home/pranshu/Bro_blogs_backend/uploads/" });
+const session = require("express-session");
 const cors = require("cors");
+require("dotenv").config();
 const port = 3000;
 app.use(express.json());
 
@@ -93,7 +102,11 @@ app.post(
   create
 );
 
+app.post("/api/uploadimage", upload.array("images"), uploadImage);
+
 app.get("/getcomments/:post_id", getComments);
+
+app.get("/api/auth/github", githuboauthHandler);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
