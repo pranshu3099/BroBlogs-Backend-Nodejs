@@ -3,7 +3,11 @@ const { signupValidation } = require("../middleware/Authmiddleware");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const axios = require("axios");
+const qs = require("qs");
+const querystring = require("querystring");
 const prisma = new PrismaClient();
+const secret = "xyz@34#";
 
 const UserRegister = async (req, res) => {
   const obj = req.body;
@@ -49,7 +53,77 @@ const UserLogin = async (req, res) => {
   }
 };
 
+const getGithubUser = async (code) => {
+  const githubtoken = await axios
+    .post(
+      `https://github.com/login/oauth/access_token?client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET_ID}&code=${code}`
+    )
+    .then((res) => res.data)
+    .catch((error) => {
+      console.log(error);
+    });
+
+  const decoded = querystring.parse(githubtoken);
+  const access_token = decoded.access_token;
+  const user = await axios
+    .get("https://api.github.com/user", {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    })
+    .then((res) => res.data)
+    .catch((err) => {
+      throw err;
+    });
+  return user;
+};
+
+const githuboauthHandler = async (req, res, next) => {
+  try {
+    const code = req.query.code;
+    const path = req.query.path;
+    if (!code) {
+      throw new Error("code not found");
+    } else {
+      const github_user = await getGithubUser(code);
+      let user = await prisma.users.findFirst({
+        where: {
+          email: github_user.email,
+        },
+      });
+
+      if (!user) {
+        user = await prisma.users.create({
+          data: {
+            email: github_user.email,
+            name: github_user.name,
+            password: github_user.password ? github_user.password : "",
+            mobile_number: github_user.mobile_number
+              ? github_user.mobile_number
+              : null,
+          },
+        });
+      }
+      const querystring = encodeURIComponent(JSON.stringify(user));
+      const token = jwt.sign(github_user, secret);
+      const sixMonthsFromNow = new Date();
+      sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+      res.cookie("github-jwt", token, {
+        httpOnly: true,
+        domain: "localhost",
+        expires: sixMonthsFromNow,
+      });
+      res
+        .status(303)
+        .redirect(`http://localhost:3001/${path}?data=${querystring}`);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 module.exports = {
   UserRegister,
   UserLogin,
+  githuboauthHandler,
 };
