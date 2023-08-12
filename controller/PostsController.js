@@ -6,23 +6,30 @@ const fs = require("fs/promises");
 const prisma = new PrismaClient();
 const { createClient } = require("@supabase/supabase-js");
 async function uploadImageToSupabase(imageFilename, extension) {
-  console.log(imageFilename);
-  const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_KEY
-  );
-  const buffer = await fs.readFile(`/home/pranshu/Downloads/${imageFilename}`);
-  const { data, error } = await supabase.storage
-    .from("images")
-    .upload(`broblogsimages/${imageFilename}`, buffer, {
-      contentType: `image/${extension}`,
-      cacheControl: "15780000", //6 months
-    });
-  if (error) {
-    console.log("error", error);
-  } else {
-    data.path = `${process.env.SUPABASE_URL_PREFIX}/${data.path}`;
-    return data;
+  try {
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_KEY
+    );
+    const buffer = await fs.readFile(
+      `/home/pranshu/Downloads/${imageFilename}`
+    );
+    const { data, error } = await supabase.storage
+      .from("images")
+      .upload(`broblogsimages/${imageFilename}`, buffer, {
+        contentType: `image/${extension}`,
+        cacheControl: "15780000", //6 months
+      });
+    if (error) {
+      console.log("error", error);
+    } else {
+      data.path = `${process.env.SUPABASE_URL_PREFIX}/${data.path}`;
+      return data;
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: err });
   }
 }
 
@@ -187,42 +194,44 @@ const getUserPost = async (req, res) => {
 
 const getSinglePost = async (req, res) => {
   const { post_id } = req.params;
-  const { authorization } = req.headers;
+  const userData = req.userData;
 
   try {
-    if (authorization) {
-      const single_posts = await prisma.posts.findFirst({
-        where: {
-          posts_id: Number(post_id),
-        },
-        select: {
-          title: true,
-          category_id: true,
-          posts_id: true,
-          parsed_content: true,
-          likes_count: true,
-          created_at: true,
-          user: {
-            select: {
-              name: true,
-            },
+    const single_posts = await prisma.posts.findFirst({
+      where: {
+        posts_id: Number(post_id),
+      },
+      select: {
+        title: true,
+        category_id: true,
+        posts_id: true,
+        parsed_content: true,
+        likes_count: true,
+        created_at: true,
+        user: {
+          select: {
+            name: true,
           },
-          comments: {
-            select: {
-              comment: true,
-              user_id: true,
-              user: {
-                select: {
-                  name: true,
-                },
+        },
+        comments: {
+          select: {
+            comment: true,
+            user_id: true,
+            user: {
+              select: {
+                name: true,
               },
             },
           },
         },
-      });
+      },
+    });
+    if (userData) {
       return res.status(200).json([{ posts: single_posts }]);
     } else {
-      return res.status(401).json({ message: "unauthorized" });
+      return res
+        .status(401)
+        .json([{ posts: single_posts, message: "unauthorized" }]);
     }
   } catch (err) {
     return res.status(500).json({ message: err });
