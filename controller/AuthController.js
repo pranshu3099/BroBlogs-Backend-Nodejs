@@ -10,17 +10,23 @@ const prisma = new PrismaClient();
 const secret = "xyz@34#";
 
 const UserRegister = async (req, res) => {
-  const obj = req.body;
-  const user_password = await bcrypt.hash(obj.password, 10);
-  const user = await prisma.users.create({
-    data: {
-      email: obj.email,
-      name: obj.name,
-      mobile_number: obj.mobile_number,
-      password: user_password,
-    },
-  });
-  return res.status(200).json({ message: "user created successfully" });
+  try {
+    const obj = req.body;
+    const user_password = await bcrypt.hash(obj.password, 10);
+    const user = await prisma.users.create({
+      data: {
+        email: obj.email,
+        name: obj.name,
+        mobile_number: obj.mobile_number,
+        password: user_password,
+      },
+    });
+    return res.status(200).json({ message: "user created successfully" });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: err });
+  }
 };
 
 const UserLogin = async (req, res) => {
@@ -48,34 +54,37 @@ const UserLogin = async (req, res) => {
       .status(200)
       .json({ message: "Login successful", Authorization: token, user: user });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
 
 const getGithubUser = async (code) => {
-  const githubtoken = await axios
-    .post(
-      `https://github.com/login/oauth/access_token?client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET_ID}&code=${code}`
-    )
-    .then((res) => res.data)
-    .catch((error) => {
-      console.log(error);
-    });
+  try {
+    const githubtoken = await axios
+      .post(
+        `https://github.com/login/oauth/access_token?client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET_ID}&code=${code}`
+      )
+      .then((res) => res.data)
+      .catch((error) => {
+        console.log(error);
+      });
 
-  const decoded = querystring.parse(githubtoken);
-  const access_token = decoded.access_token;
-  const user = await axios
-    .get("https://api.github.com/user", {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    })
-    .then((res) => res.data)
-    .catch((err) => {
-      throw err;
-    });
-  return user;
+    const decoded = querystring.parse(githubtoken);
+    const access_token = decoded.access_token;
+    const github_user = await axios
+      .get("https://api.github.com/user", {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      })
+      .then((res) => res.data);
+
+    return { github_user, access_token };
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: err });
+  }
 };
 
 const githuboauthHandler = async (req, res, next) => {
@@ -85,13 +94,12 @@ const githuboauthHandler = async (req, res, next) => {
     if (!code) {
       throw new Error("code not found");
     } else {
-      const github_user = await getGithubUser(code);
+      const { github_user, access_token } = await getGithubUser(code);
       let user = await prisma.users.findFirst({
         where: {
           email: github_user.email,
         },
       });
-
       if (!user) {
         user = await prisma.users.create({
           data: {
@@ -105,13 +113,11 @@ const githuboauthHandler = async (req, res, next) => {
         });
       }
       const querystring = encodeURIComponent(JSON.stringify(user));
-      const token = jwt.sign(github_user, secret);
       const sixMonthsFromNow = new Date();
       sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
-      res.cookie("github-jwt", token, {
+      res.cookies.set("github-jwt", access_token, {
         httpOnly: true,
-        domain: "localhost",
-        expires: sixMonthsFromNow,
+        maxAge: 15552000 * 1000,
       });
       res
         .status(303)
@@ -119,6 +125,9 @@ const githuboauthHandler = async (req, res, next) => {
     }
   } catch (err) {
     console.log(err);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: err });
   }
 };
 
