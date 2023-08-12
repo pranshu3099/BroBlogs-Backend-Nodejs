@@ -1,22 +1,25 @@
 const { z } = require("zod");
-
-const signupValidation = (data) => {
-  const validateName = z.string({
-    required_error: "Name is required",
-    invalid_type_error: "Name must be a string",
-  });
+const axios = require("axios");
+const AuthValidation = async (req, res, next) => {
+  let userData;
   try {
-    if (validateName.nonempty()) {
-      if (validateName.parse(data.name)) {
-        console.log("okks");
-      }
+    const token = req.cookies.get("github-jwt");
+    if (token) {
+      const user = await axios.get("https://api.github.com/user", {
+        headers: {
+          Authorization: `token ${token}`,
+          accept: "application/json",
+        },
+      });
+      userData = user.data;
     }
   } catch (err) {
-    console.log(JSON.parse(err.message)?.map((x) => x.message));
+    console.error("Error fetching user data from GitHub API:", err.message);
   }
-  // if(validateName.max(100) && validateName.min(2))
+  req.userData = userData;
+  next();
 };
 
 module.exports = {
-  signupValidation,
+  AuthValidation,
 };
