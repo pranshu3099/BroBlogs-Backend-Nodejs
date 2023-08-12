@@ -17,16 +17,24 @@ const { create, getComments } = require("./controller/CommentController");
 const app = express();
 const { z, string } = require("zod");
 const { validate } = require("./middleware/validate");
+const { AuthValidation } = require("./middleware/Authmiddleware");
 const multer = require("multer");
 const upload = multer({ dest: "/home/pranshu/Bro_blogs_backend/uploads/" });
 const session = require("express-session");
 const cors = require("cors");
 require("dotenv").config();
+const Cookies = require("cookies");
 const port = 3000;
 app.use(express.json());
+app.use(Cookies.express([""]));
 
 if (process.env.NODE_ENV === "development") {
-  app.use(cors());
+  app.use(
+    cors({
+      origin: "http://localhost:3001",
+      credentials: true,
+    })
+  );
 }
 
 const passwordRegex =
@@ -85,12 +93,12 @@ app.post(
 
 app.get("/getposts", getHomePosts);
 app.get("/uerPosts/:user_id", getUserPost);
-app.get("/getsinglepost/:post_id", getSinglePost);
+app.get("/getsinglepost/:post_id", AuthValidation, getSinglePost);
 
 app.get("/getCategories", getCategories);
 
-app.post("/addLikes/:post_id/users/:user_id", addLikes);
-app.post("/removeLikes/:post_id/users/:user_id", remove_like);
+app.post("/addLikes/:post_id/users/:user_id", AuthValidation, addLikes);
+app.post("/removeLikes/:post_id/users/:user_id", AuthValidation, remove_like);
 
 app.post(
   "/comment",
@@ -99,6 +107,7 @@ app.post(
       comment: z.string(2).max(10000),
     }),
   }),
+  AuthValidation,
   create
 );
 
