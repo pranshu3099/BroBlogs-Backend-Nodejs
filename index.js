@@ -3,6 +3,7 @@ const {
   UserRegister,
   UserLogin,
   githuboauthHandler,
+  ChecktokenValidity,
 } = require("./controller/AuthController");
 const {
   createPosts,
@@ -116,6 +117,8 @@ app.post("/api/uploadimage", upload.array("images"), uploadImage);
 app.get("/getcomments/:post_id", getComments);
 
 app.get("/api/auth/github", githuboauthHandler);
+
+app.get("/tokenvalid", AuthValidation, ChecktokenValidity);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

@@ -131,8 +131,17 @@ const githuboauthHandler = async (req, res, next) => {
   }
 };
 
+const ChecktokenValidity = (req, res, next) => {
+  let userData = req.userData;
+  if (userData) {
+    return res.status(200).json([{ message: "success" }]);
+  }
+  return res.status(401).json([{ message: "unauthorized" }]);
+};
+
 module.exports = {
   UserRegister,
   UserLogin,
   githuboauthHandler,
+  ChecktokenValidity,
 };
