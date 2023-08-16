@@ -2,21 +2,18 @@ const { PrismaClient } = require("@prisma/client");
 const marked = require("marked");
 const cheerio = require("cheerio");
 const axios = require("axios");
-const fs = require("fs/promises");
+const fs = require("fs");
 const prisma = new PrismaClient();
 const { createClient } = require("@supabase/supabase-js");
-async function uploadImageToSupabase(imageFilename, extension) {
+async function uploadImageToSupabase(buffer, extension, imageFilename) {
   try {
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_KEY
     );
-    const buffer = await fs.readFile(
-      `/home/pranshu/Downloads/${imageFilename}`
-    );
     const { data, error } = await supabase.storage
       .from("images")
-      .upload(`broblogsimages/${imageFilename}`, buffer, {
+      .upload(`broblogsimages/${imageFilename}`, buffer.buffer, {
         contentType: `image/${extension}`,
         cacheControl: "15780000", //6 months
       });
@@ -27,9 +24,10 @@ async function uploadImageToSupabase(imageFilename, extension) {
       return data;
     }
   } catch (err) {
+    console.log(err);
     return res
       .status(500)
-      .json({ message: "Internal server error", error: err });
+      .json({ message: "Internal server error", error: err.message });
   }
 }
 
@@ -49,14 +47,16 @@ const getExtension = (img) => {
 
 const uploadImage = async (req, res, next) => {
   try {
-    const { body } = req;
-
-    const selectedImages = body.images;
+    const selectedImages = req.files;
     let uploadedImages = [];
     if (Array.isArray(selectedImages)) {
       for (let i = 0; i < selectedImages.length; i++) {
-        let extension = getExtension(selectedImages[i]);
-        await uploadImageToSupabase(selectedImages[i], extension)
+        let extension = getExtension(selectedImages[i].originalname);
+        await uploadImageToSupabase(
+          selectedImages[i].buffer,
+          extension,
+          selectedImages[i].originalname
+        )
           .then((data) => {
             uploadedImages.push(data);
           })
@@ -64,10 +64,6 @@ const uploadImage = async (req, res, next) => {
             console.log(err);
           });
       }
-    } else {
-      await uploadImageToSupabase(selectedImages).then((data) => {
-        uploadedImages.push(data);
-      });
     }
     return res.status(200).json({ url: uploadedImages });
   } catch (err) {
@@ -144,6 +140,7 @@ const getHomePosts = async (req, res) => {
     });
     res.status(200).json([{ posts: results }]);
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ message: err });
   }
 };
