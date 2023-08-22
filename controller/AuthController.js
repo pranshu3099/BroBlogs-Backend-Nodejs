@@ -132,12 +132,18 @@ const githuboauthHandler = async (req, res, next) => {
   }
 };
 
-const ChecktokenValidity = (req, res, next) => {
+const ChecktokenValidity = async (req, res, next) => {
   let userData = req.userData;
   if (userData) {
-    return res.status(200).json([{ message: "success" }]);
+    let user = await prisma.users.findFirst({
+      where: {
+        email: userData.email,
+      },
+    });
+    return res.status(200).json([{ message: "success", user: user }]);
+  } else {
+    return res.status(401).json([{ message: "unauthorized" }]);
   }
-  return res.status(401).json([{ message: "unauthorized" }]);
 };
 
 module.exports = {
