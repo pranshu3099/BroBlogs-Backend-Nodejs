@@ -20,6 +20,7 @@ const create = async (req, res) => {
       return res.status(401).json([{ message: "unauthorized" }]);
     }
   } catch (err) {
+    console.log(err);
     return res
       .status(500)
       .json({ message: "Internal server error", error: err });
