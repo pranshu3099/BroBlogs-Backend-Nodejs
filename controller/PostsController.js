@@ -223,15 +223,10 @@ const getSinglePost = async (req, res) => {
         },
       },
     });
-    if (userData) {
-      return res.status(200).json([{ posts: single_posts }]);
-    } else {
-      return res
-        .status(401)
-        .json([{ posts: single_posts, message: "unauthorized" }]);
-    }
+    return res.status(200).json([{ posts: single_posts }]);
   } catch (err) {
-    return res.status(500).json({ message: err });
+    console.log(err);
+    return res.status(500).json({ message: err.message });
   }
 };
 
