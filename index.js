@@ -26,7 +26,7 @@ const session = require("express-session");
 const cors = require("cors");
 require("dotenv").config();
 const Cookies = require("cookies");
-const port = 3000;
+const port = process.env.PORT;
 app.use(express.json());
 app.use(Cookies.express([""]));
 
