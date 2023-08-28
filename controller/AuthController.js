@@ -23,6 +23,7 @@ const UserRegister = async (req, res) => {
     });
     return res.status(200).json({ message: "user created successfully" });
   } catch (err) {
+    console.log(err);
     return res
       .status(500)
       .json({ message: "Internal server error", error: err });
@@ -82,6 +83,7 @@ const getGithubUser = async (code) => {
 
     return { github_user, access_token };
   } catch (err) {
+    console.log(err);
     return res
       .status(500)
       .json({ message: "Internal server error", error: err });

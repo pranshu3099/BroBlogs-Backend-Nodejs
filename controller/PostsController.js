@@ -117,6 +117,7 @@ const createPosts = async (req, res, next) => {
       return res.status(401).json({ message: "unauthorized" });
     }
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ message: err });
   }
 };
@@ -185,6 +186,7 @@ const getUserPost = async (req, res) => {
       return res.status(401).json({ message: "unauthorized" });
     }
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ message: err });
   }
 };

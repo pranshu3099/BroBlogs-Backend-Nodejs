@@ -14,6 +14,7 @@ const AuthValidation = async (req, res, next) => {
       userData = user.data;
     }
   } catch (err) {
+    console.log(err);
     console.error("Error fetching user data from GitHub API:", err.message);
   }
   req.userData = userData;
