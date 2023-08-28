@@ -33,7 +33,7 @@ app.use(Cookies.express([""]));
 if (process.env.NODE_ENV === "development") {
   app.use(
     cors({
-      origin: "http://localhost:3001",
+      origin: process.env.FRONTEND_URL,
       credentials: true,
     })
   );
