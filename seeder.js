@@ -14,7 +14,7 @@ async function seed() {
 
     // Loop through the array and create each category
     for (const categoryData of categoriesToSeed) {
-      await prisma.category.create({
+      await prisma.categories.create({
         data: categoryData,
       });
     }
