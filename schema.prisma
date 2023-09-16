@@ -23,7 +23,7 @@ model posts {
   id           Int       @id @default(autoincrement())
   title        String
   content      String    @db.VarChar(10000)  
-  parsed_content String  @db.Text
+  parsed_content String  @db.VarChar(10000)
   category_id  Int
   posts_id     Int       @unique
   user_id      Int
