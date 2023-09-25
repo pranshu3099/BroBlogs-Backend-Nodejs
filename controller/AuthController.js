@@ -124,7 +124,7 @@ const githuboauthHandler = async (req, res, next) => {
       });
       res
         .status(303)
-        .redirect(`http://localhost:3001/${path}?data=${querystring}`);
+        .redirect(`${process.env.FRONTEND_URL}/${path}?data=${querystring}`);
     }
   } catch (err) {
     console.log(err);
