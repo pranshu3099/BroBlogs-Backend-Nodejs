@@ -8,7 +8,6 @@ const qs = require("qs");
 const querystring = require("querystring");
 const prisma = new PrismaClient();
 const secret = "xyz@34#";
-
 const UserRegister = async (req, res) => {
   try {
     const obj = req.body;
