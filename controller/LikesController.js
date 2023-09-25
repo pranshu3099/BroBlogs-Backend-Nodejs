@@ -37,16 +37,20 @@ const addLikes = async (req, res) => {
         },
       });
 
-      const like = await prisma.likes.create({
-        data: {
-          post_id: Number(post_id),
-          user_id: Number(user_id),
-        },
-      });
+      if (!hasLiked) {
+        const like = await prisma.likes.create({
+          data: {
+            post_id: Number(post_id),
+            user_id: Number(user_id),
+          },
+        });
 
-      let count;
-      await updatepostLikes(post_id).then((res) => (count = res));
-      return res.status(200).json({ likes: count });
+        let count;
+        await updatepostLikes(post_id).then((res) => (count = res));
+        return res.status(200).json({ likes: count });
+      } else {
+        return res.status(200).json([{ message: "already liked" }]);
+      }
     } else {
       return res.status(401).json([{ message: "unauthorized" }]);
     }
