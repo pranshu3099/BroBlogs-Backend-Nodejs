@@ -57,7 +57,7 @@ model likes {
 model comments {
   id           Int       @id @default(autoincrement())
   comment      String    @db.VarChar(10000) 
-  posts_id     Int       @unique
+  posts_id     Int       
   user_id      Int       
   user         users     @relation(fields: [user_id], references: [id])
   posts         posts     @relation(fields: [posts_id], references: [posts_id])
