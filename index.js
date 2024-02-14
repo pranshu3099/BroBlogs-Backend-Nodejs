@@ -33,6 +33,7 @@ app.use(Cookies.express([""]));
 app.use(
   cors({
     origin: process.env.FRONTEND_URL,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   })
 );
@@ -120,5 +121,5 @@ app.get("/api/auth/github", githuboauthHandler);
 app.get("/tokenvalid", AuthValidation, ChecktokenValidity);
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`BroBlogs listening on port ${port}`);
 });
