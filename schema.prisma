@@ -60,7 +60,7 @@ model comments {
   posts_id     Int       
   user_id      Int       
   user         users     @relation(fields: [user_id], references: [id])
-  posts         posts     @relation(fields: [posts_id], references: [posts_id])
+  post         posts     @relation(fields: [posts_id], references: [posts_id])
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
 }
