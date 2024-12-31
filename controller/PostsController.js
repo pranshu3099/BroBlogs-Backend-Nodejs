@@ -1,15 +1,25 @@
 const { PrismaClient } = require("@prisma/client");
 const marked = require("marked");
 const cheerio = require("cheerio");
-const axios = require("axios");
-const fs = require("fs");
 const prisma = new PrismaClient();
 const { createClient } = require("@supabase/supabase-js");
+const normalizeTitle = (slug) => {
+  return slug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 async function uploadImageToSupabase(buffer, extension, imageFilename) {
   try {
     const supabase = createClient(
       process.env.SUPABASE_URL,
-      process.env.SUPABASE_KEY
+      process.env.SUPABASE_KEY,
+      {
+        auth: {
+          persistSession: false,
+        },
+      }
     );
     const { data, error } = await supabase.storage
       .from("images")
@@ -33,9 +43,9 @@ async function uploadImageToSupabase(buffer, extension, imageFilename) {
 
 async function processMarkdownAndInsertImageUrls(content) {
   const parsedHtml = marked(content);
-  const $ = cheerio.load(parsedHtml);
 
-  const updatedHtml = $.html();
+  const $ = cheerio.load(parsedHtml);
+  let updatedHtml = $.html();
   return updatedHtml;
 }
 
@@ -139,7 +149,7 @@ const getHomePosts = async (req, res) => {
         },
       },
     });
-    res.status(200).json([{ posts: results }]);
+    res.status(200).json(results);
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: err });
@@ -192,13 +202,13 @@ const getUserPost = async (req, res) => {
 };
 
 const getSinglePost = async (req, res) => {
-  const { post_id } = req.params;
+  const { post_title } = req.params;
   const userData = req.userData;
 
   try {
     const single_posts = await prisma.posts.findFirst({
       where: {
-        posts_id: Number(post_id),
+        title: normalizeTitle(post_title),
       },
       select: {
         title: true,
@@ -225,7 +235,8 @@ const getSinglePost = async (req, res) => {
         },
       },
     });
-    return res.status(200).json([{ posts: single_posts }]);
+
+    return res.status(200).json([single_posts]);
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: err.message });
