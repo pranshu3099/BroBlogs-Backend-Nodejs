@@ -13,7 +13,11 @@ const {
   uploadImage,
 } = require("./controller/PostsController");
 const { getCategories } = require("./controller/CategoryController");
-const { addLikes, remove_like } = require("./controller/LikesController");
+const {
+  addLikes,
+  remove_like,
+  isPostLiked,
+} = require("./controller/LikesController");
 const { create, getComments } = require("./controller/CommentController");
 const app = express();
 const { z, string } = require("zod");
@@ -94,12 +98,13 @@ app.post(
 
 app.get("/getposts", getHomePosts);
 app.get("/uerPosts/:user_id", getUserPost);
-app.get("/getsinglepost/:post_id", AuthValidation, getSinglePost);
+app.get("/getsinglepost/:post_title", AuthValidation, getSinglePost);
 
 app.get("/getCategories", getCategories);
 
 app.post("/addLikes/:post_id/users/:user_id", AuthValidation, addLikes);
 app.post("/removeLikes/:post_id/users/:user_id", AuthValidation, remove_like);
+app.get("/ispostLiked/:post_id/users/:user_id", AuthValidation, isPostLiked);
 
 app.post(
   "/comment",

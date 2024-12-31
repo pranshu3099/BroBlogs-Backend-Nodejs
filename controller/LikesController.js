@@ -25,6 +25,27 @@ const updatepostLikes = async (post_id) => {
   }
 };
 
+const isPostLiked = async (req, res) => {
+  try {
+    const { post_id, user_id } = req.params;
+    const userData = req.userData;
+    if (userData) {
+      const hasLiked = await prisma.likes.findFirst({
+        where: {
+          post_id: Number(post_id),
+          user_id: Number(user_id),
+        },
+      });
+
+      if (hasLiked) {
+        return res.status(200).json({ has_liked: true });
+      } else {
+        return res.status(200).json({ has_liked: false });
+      }
+    }
+  } catch (err) {}
+};
+
 const addLikes = async (req, res) => {
   try {
     const { post_id, user_id } = req.params;
@@ -49,7 +70,7 @@ const addLikes = async (req, res) => {
         await updatepostLikes(post_id).then((res) => (count = res));
         return res.status(200).json({ likes: count });
       } else {
-        return res.status(200).json([{ message: "already liked" }]);
+        return res.status(200).json({ message: "already liked" });
       }
     } else {
       return res.status(401).json([{ message: "unauthorized" }]);
@@ -90,4 +111,5 @@ const remove_like = async (req, res) => {
 module.exports = {
   addLikes,
   remove_like,
+  isPostLiked,
 };
