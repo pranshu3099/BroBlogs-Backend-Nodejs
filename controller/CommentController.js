@@ -44,7 +44,7 @@ const getComments = async (req, res) => {
         },
       },
     });
-    return res.status(200).json({ comments: user_comments });
+    return res.status(200).json(user_comments);
   } catch (err) {
     console.log(err);
     return res

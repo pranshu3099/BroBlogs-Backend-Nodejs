@@ -97,7 +97,7 @@ app.post(
 );
 
 app.get("/getposts", getHomePosts);
-app.get("/uerPosts/:user_id", getUserPost);
+app.get("/userPosts/:user_id", getUserPost);
 app.get("/getsinglepost/:post_title", AuthValidation, getSinglePost);
 
 app.get("/getCategories", getCategories);
