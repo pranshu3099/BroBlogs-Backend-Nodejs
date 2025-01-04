@@ -63,7 +63,12 @@ const getGithubUser = async (code) => {
   try {
     const githubtoken = await axios
       .post(
-        `https://github.com/login/oauth/access_token?client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET_ID}&code=${code}`
+        `https://github.com/login/oauth/access_token?client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET_ID}&code=${code}`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        }
       )
       .then((res) => res.data)
       .catch((error) => {
@@ -76,27 +81,38 @@ const getGithubUser = async (code) => {
       .get("https://api.github.com/user", {
         headers: {
           Authorization: `Bearer ${access_token}`,
+          Accept: "application/vnd.github.v3+json",
+          "User-Agent": "Production server Blog",
         },
       })
       .then((res) => res.data);
 
     return { github_user, access_token };
-  } catch (err) {
-    console.log(err);
-    return res
-      .status(500)
-      .json({ message: "Internal server error", error: err });
+  } catch (error) {
+    console.error("GitHub OAuth Error:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+    throw error;
   }
 };
 
 const githuboauthHandler = async (req, res, next) => {
   try {
     const code = req.query.code;
-    const path = req.query.path;
+    const path = req.query.path || "";
     if (!code) {
       throw new Error("code not found");
+    }
+    if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET_ID) {
+      console.error("Missing required environment variables");
+      return res.status(500).json({ message: "Server configuration error" });
     } else {
       const { github_user, access_token } = await getGithubUser(code);
+      if (!github_user.email) {
+        return res.status(400).json({ message: "GitHub email is required" });
+      }
       let user = await prisma.users.findFirst({
         where: {
           email: github_user.email,
@@ -106,7 +122,7 @@ const githuboauthHandler = async (req, res, next) => {
         user = await prisma.users.create({
           data: {
             email: github_user.email,
-            name: github_user.name,
+            name: github_user.name || github_user.login,
             password: github_user.password ? github_user.password : "",
             mobile_number: github_user.mobile_number
               ? github_user.mobile_number
@@ -126,7 +142,7 @@ const githuboauthHandler = async (req, res, next) => {
         .redirect(`${process.env.FRONTEND_URL}/${path}?data=${querystring}`);
     }
   } catch (err) {
-    console.log(err);
+    console.error("OAuth Handler Error:", err);
     return res
       .status(500)
       .json({ message: "Internal server error", error: err });
