@@ -110,6 +110,7 @@ const githuboauthHandler = async (req, res, next) => {
       return res.status(500).json({ message: "Server configuration error" });
     } else {
       const { github_user, access_token } = await getGithubUser(code);
+      console.log(github_user);
       if (!github_user.email) {
         return res.status(400).json({ message: "GitHub email is required" });
       }
