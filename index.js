@@ -61,9 +61,9 @@ const registerSchema = z.object({
     .regex(mobileRegex, { message: "Inavalid mobile number" }),
 });
 
-app.get("/", (req, res) => {
-  res.send("welcome to my blog!");
-});
+// app.get("/", (req, res) => {
+//   res.send("welcome to my blog!");
+// });
 
 app.post(
   "/register",
