@@ -132,6 +132,36 @@ const createPosts = async (req, res, next) => {
   }
 };
 
+const updatePost = async (req, res) => {
+  const { title, content, posts_id } = req.body;
+  const { authorization } = req?.headers;
+  try {
+    if (authorization) {
+      const post = await prisma.posts.findFirst({
+        where: {
+          posts_id: Number(posts_id),
+        },
+      });
+
+      if (post) {
+        await prisma.posts.update({
+          where: {
+            posts_id: Number(posts_id),
+          },
+
+          data: { ...post, title: title, parsed_content: content },
+        });
+      }
+
+      return res.status(200).json({ message: "post updated successfully" });
+    } else {
+      return res.status(401).json({ message: "unauthorized" });
+    }
+  } catch (err) {
+    return res.status(500).json({ message: "internal server error", err: err });
+  }
+};
+
 const getHomePosts = async (req, res) => {
   try {
     const results = await prisma.posts.findMany({
@@ -249,4 +279,5 @@ module.exports = {
   getUserPost,
   getSinglePost,
   uploadImage,
+  updatePost,
 };

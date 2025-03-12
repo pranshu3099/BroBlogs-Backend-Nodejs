@@ -11,6 +11,7 @@ const {
   getUserPost,
   getSinglePost,
   uploadImage,
+  updatePost,
 } = require("./controller/PostsController");
 const { getCategories } = require("./controller/CategoryController");
 const {
@@ -61,10 +62,6 @@ const registerSchema = z.object({
     .regex(mobileRegex, { message: "Inavalid mobile number" }),
 });
 
-// app.get("/", (req, res) => {
-//   res.send("welcome to my blog!");
-// });
-
 app.post(
   "/register",
   validate({
@@ -98,6 +95,11 @@ app.post(
     }),
   }),
   createPosts
+);
+app.post(
+  "/updateposts",
+
+  updatePost
 );
 
 app.get("/getposts", getHomePosts);
